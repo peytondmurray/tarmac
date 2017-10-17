@@ -19,7 +19,10 @@ def labelOffset(ax, axis="y"):
 		label = ax.get_xlabel()
 
 	def updateLabel(lim):
-		labelfunc("{} ({})".format(label, fmt.get_offset()))
+		offset = fmt.get_offset()
+		if offset != '':
+			offset = "({})".format(offset)
+		labelfunc("{} {}".format(label, offset))
 		return
 
 	ax.callbacks.connect("ylim_changed", updateLabel)
@@ -27,8 +30,7 @@ def labelOffset(ax, axis="y"):
 	updateLabel(None)
 	return
 
-
-def pycorner(fig, samples, bins=100, ranges=None, labels=None, cmap=None, plotType="hist"):
+def cornerPlot(fig, samples, bins=100, ranges=None, labels=None, cmap=None, plotType="hist"):
 	"""
 	samples: 2D array of shape (nsamples, ndim)
 	"""
@@ -54,14 +56,12 @@ def pycorner(fig, samples, bins=100, ranges=None, labels=None, cmap=None, plotTy
 			if range[i] is None:
 				range[i] = [np.nanmin(samples[:,i]), np.nanmax(samples[:,i])]
 
-	#Divide the figure into a bunch of subplots
-	axes = fig.subplots(ndim, ndim)
-
 	#Set the default colormap to viridis
 	if cmap is None:
 		cmap = "viridis"
 
-	#Remove whitespace between plots
+	#Divide the figure into a bunch of subplots, and Remove whitespace between plots
+	axes = fig.subplots(ndim, ndim)
 	fig.subplots_adjust(left=0.1, bottom=0.1, right=0.98, top=0.98, wspace=0.05, hspace=0.05)
 
 	for i in range(ndim):
@@ -106,7 +106,7 @@ def pycorner(fig, samples, bins=100, ranges=None, labels=None, cmap=None, plotTy
 				axes[i,j].set_ylim(ylim)
 
 			for tick in axes[i,j].get_xticklabels():
-					tick.set_rotation(45)
+				tick.set_rotation(45)
 
 
 	return
@@ -115,6 +115,29 @@ def makeNiceLimits(samplesx, factor=3):
 	sx = factor*np.std(samplesx)
 	avgx = np.mean(samplesx)
 	return [avgx-sx, avgx+sx]
+
+def walkerTrace(fig, samples, labels=None, **kwargs):
+	#Make sure the arguments are all copacetic
+	# assert len(np.shape(samples)) == 2, "samples list must be of shape (nsamples, ndim), but is of shape {}".format(np.shape(samples))
+	nwalkers, nsteps, ndim = np.shape(samples)
+	# assert nsamples > ndim, "Number of samples is greater than number of dimensions."
+
+	axes = fig.subplots(ndim, 1)
+	fig.subplots_adjust(left=0.1, bottom=0.1, right=0.98, top=0.98, wspace=0.05, hspace=0.05)
+
+	for i in range(ndim):
+		axes[i].plot(samples[:,:,i], **kwargs)
+
+		if i < ndim - 1:
+			axes[i].set_xticklabels([])
+
+
+		axes[i].set_xlim(0, len(samples[:,i]))
+		labelOffset(axes[i], "y")
+		for tick in axes[i].get_xticklabels():
+				tick.set_rotation(45)
+
+	return
 
 if __name__ == "__main__":
 	fig = plt.figure(figsize=(10,10))
@@ -128,5 +151,6 @@ if __name__ == "__main__":
 
 	data = np.array(data)
 
-	pycorner(fig, data, labels=["a", "b", "c", "d"], plotType="hist", cmap=cmocean.cm.tempo_r)
+	# cornerPlot(fig, data, labels=["a", "b", "c", "d"], plotType="hist", cmap=cmocean.cm.tempo_r)
+	walkerTrace(fig, data.reshape((-1,20,4)), labels=["a", "b", "c", "d"], linestyle='-', color='k', alpha=0.3)
 	plt.show()
