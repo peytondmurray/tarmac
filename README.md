@@ -1,2 +1,2 @@
-# pycorner
-Tools for visualising MCMC samples.
+# tarmac
+Tools for visualising markov chain samples.
