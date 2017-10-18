@@ -135,14 +135,14 @@ def walkerTrace(fig, samples, labels=None, **kwargs):
 		axes[i].set_xlim(0, len(samples[:,i]))
 		labelOffset(axes[i], "y")
 		for tick in axes[i].get_xticklabels():
-				tick.set_rotation(45)
+			tick.set_rotation(45)
 
 	return
 
 if __name__ == "__main__":
 	fig = plt.figure(figsize=(10,10))
 
-	with open("test_data.csv", 'r') as f:
+	with open("testing/test_data.csv", 'r') as f:
 		rawdata = f.readlines()
 
 	data = []
@@ -151,6 +151,6 @@ if __name__ == "__main__":
 
 	data = np.array(data)
 
-	# cornerPlot(fig, data, labels=["a", "b", "c", "d"], plotType="hist", cmap=cmocean.cm.tempo_r)
-	walkerTrace(fig, data.reshape((-1,20,4)), labels=["a", "b", "c", "d"], linestyle='-', color='k', alpha=0.3)
+	cornerPlot(fig, data, labels=["a", "b", "c", "d"], plotType="hist", cmap=cmocean.cm.tempo_r)
+	# walkerTrace(fig, data.reshape((-1,20,4)), labels=["a", "b", "c", "d"], linestyle='-', color='k', alpha=0.3)
 	plt.show()
