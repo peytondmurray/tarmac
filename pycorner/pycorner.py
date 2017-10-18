@@ -18,7 +18,7 @@ def labelOffset(ax, axis="y"):
 		labelfunc = ax.set_xlabel
 		label = ax.get_xlabel()
 
-	def updateLabel(lim):
+	def updateLabel(event_axes):
 		offset = fmt.get_offset()
 		if offset != '':
 			offset = "({})".format(offset)
@@ -26,6 +26,7 @@ def labelOffset(ax, axis="y"):
 		return
 
 	ax.callbacks.connect("ylim_changed", updateLabel)
+	ax.callbacks.connect("xlim_changed", updateLabel)
 	ax.figure.canvas.draw()
 	updateLabel(None)
 	return
@@ -117,40 +118,25 @@ def makeNiceLimits(samplesx, factor=3):
 	return [avgx-sx, avgx+sx]
 
 def walkerTrace(fig, samples, labels=None, **kwargs):
-	#Make sure the arguments are all copacetic
-	# assert len(np.shape(samples)) == 2, "samples list must be of shape (nsamples, ndim), but is of shape {}".format(np.shape(samples))
 	nwalkers, nsteps, ndim = np.shape(samples)
-	# assert nsamples > ndim, "Number of samples is greater than number of dimensions."
+	if labels is None:
+		labels = [None for _ in range(ndim)]
 
 	axes = fig.subplots(ndim, 1)
 	fig.subplots_adjust(left=0.1, bottom=0.1, right=0.98, top=0.98, wspace=0.05, hspace=0.05)
 
 	for i in range(ndim):
-		axes[i].plot(samples[:,:,i], **kwargs)
+		axes[i].plot(samples[:,:,i].T, **kwargs)
 
 		if i < ndim - 1:
 			axes[i].set_xticklabels([])
 
-
-		axes[i].set_xlim(0, len(samples[:,i]))
+		axes[i].set_xlim(0, nsteps)
 		labelOffset(axes[i], "y")
-		for tick in axes[i].get_xticklabels():
-			tick.set_rotation(45)
+
+		if labels[i] is not None:
+			axes[i].set_ylabel(labels[i])
+
+	axes[ndim-1].set_xlabel("Step")
 
 	return
-
-if __name__ == "__main__":
-	fig = plt.figure(figsize=(10,10))
-
-	with open("testing/test_data.csv", 'r') as f:
-		rawdata = f.readlines()
-
-	data = []
-	for line in rawdata:
-		data.append([float(pt) for pt in line.split(',')])
-
-	data = np.array(data)
-
-	cornerPlot(fig, data, labels=["a", "b", "c", "d"], plotType="hist", cmap=cmocean.cm.tempo_r)
-	# walkerTrace(fig, data.reshape((-1,20,4)), labels=["a", "b", "c", "d"], linestyle='-', color='k', alpha=0.3)
-	plt.show()

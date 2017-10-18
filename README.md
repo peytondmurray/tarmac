@@ -1,2 +1,2 @@
 # pycorner
-Make corner plots from MCMC sample arrays
+Tools for visualising MCMC samples.
