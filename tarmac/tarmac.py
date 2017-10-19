@@ -1,8 +1,4 @@
-import matplotlib
-matplotlib.use("Qt5Agg")
-import matplotlib.pyplot as plt
 import numpy as np
-import cmocean
 import matplotlib.ticker as ticker
 
 def labelOffset(ax, axis="y"):
