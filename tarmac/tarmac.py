@@ -8,6 +8,7 @@ def labelOffset(ax, axis="y"):
 		ax.yaxis.offsetText.set_visible(False)
 		labelfunc = ax.set_ylabel
 		label = ax.get_ylabel()
+
 	elif axis == "x":
 		fmt = ax.xaxis.get_major_formatter()
 		ax.xaxis.offsetText.set_visible(False)
@@ -16,9 +17,10 @@ def labelOffset(ax, axis="y"):
 
 	def updateLabel(event_axes):
 		offset = fmt.get_offset()
-		if offset != '':
-			offset = "({})".format(offset)
-		labelfunc("{} {}".format(label, offset))
+		if offset == '':
+			labelfunc("{}".format(label))
+		else:
+			labelfunc("{} ({})".format(label, offset))
 		return
 
 	ax.callbacks.connect("ylim_changed", updateLabel)
@@ -53,6 +55,9 @@ def cornerPlot(fig, samples, bins=100, ranges=None, labels=None, cmap=None, plot
 			if range[i] is None:
 				range[i] = [np.nanmin(samples[:,i]), np.nanmax(samples[:,i])]
 
+	if labels is None:
+		labels = ["" for _ in range(ndim)]
+
 	#Set the default colormap to viridis
 	if cmap is None:
 		cmap = "viridis"
@@ -73,6 +78,7 @@ def cornerPlot(fig, samples, bins=100, ranges=None, labels=None, cmap=None, plot
 		elif i == ndim - 1:
 			ax.set_xlabel(labels[i])
 			ax.get_xaxis().set_major_locator(ticker.MaxNLocator(nbins=5, prune='upper'))
+			labelOffset(ax, "x")
 
 
 		#Plot the 2D histograms in the lower left corner
@@ -115,8 +121,15 @@ def makeNiceLimits(samplesx, factor=3):
 
 def walkerTrace(fig, samples, labels=None, **kwargs):
 	nwalkers, nsteps, ndim = np.shape(samples)
+
 	if labels is None:
 		labels = [None for _ in range(ndim)]
+
+	if "color" not in kwargs:
+		kwargs["color"] = 'k'
+	if "alpha" not in kwargs:
+		kwargs["alpha"] = 0.3
+
 
 	axes = fig.subplots(ndim, 1)
 	fig.subplots_adjust(left=0.1, bottom=0.1, right=0.98, top=0.98, wspace=0.05, hspace=0.05)
@@ -128,10 +141,10 @@ def walkerTrace(fig, samples, labels=None, **kwargs):
 			axes[i].set_xticklabels([])
 
 		axes[i].set_xlim(0, nsteps)
-		labelOffset(axes[i], "y")
-
 		if labels[i] is not None:
 			axes[i].set_ylabel(labels[i])
+
+		labelOffset(axes[i], "y")
 
 	axes[ndim-1].set_xlabel("Step")
 
