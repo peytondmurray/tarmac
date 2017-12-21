@@ -2,6 +2,12 @@ import numpy as np
 import matplotlib.ticker as ticker
 
 def labelOffset(ax, axis="y"):
+	"""
+
+	Removes axis ticklabel offsets (e.g. exponents) and moves them to the axis label. Label is dynamically updated
+	when axis range changes.
+
+	"""
 
 	if axis == "y":
 		fmt = ax.yaxis.get_major_formatter()
@@ -31,9 +37,14 @@ def labelOffset(ax, axis="y"):
 
 def cornerPlot(fig, samples, bins=100, ranges=None, labels=None, cmap=None, plotType="hist"):
 	"""
-	samples: 2D array of shape (nsamples, ndim)
-	"""
+	Generate a cornerplot of the model parameters. Shows 2D slices of the parameter distributions.
 
+	samples: 2D array of shape (nsamples, ndim)
+	plotType: hex or hist - use hexbin or standard histogram
+	cmap: colormap for the 2d histograms
+	labels: names of the parameters, should be of length ndim
+
+	"""
 
 	#Make sure the arguments are all copacetic
 	assert len(np.shape(samples)) == 2, "samples list must be of shape (nsamples, ndim), but is of shape {}".format(np.shape(samples))
@@ -115,11 +126,26 @@ def cornerPlot(fig, samples, bins=100, ranges=None, labels=None, cmap=None, plot
 	return
 
 def makeNiceLimits(samplesx, factor=3):
+	"""
+
+	Determine reasonable axis limits for displaying the 2D joint distributions
+
+	"""
+
+
 	sx = factor*np.std(samplesx)
 	avgx = np.mean(samplesx)
 	return [avgx-sx, avgx+sx]
 
 def walkerTrace(fig, samples, labels=None, **kwargs):
+	"""
+
+	Make plots for each model parameter showing how the MCMC walkers traversed parameter space. Samples should be
+	of shape (nwalkers, nsteps, ndim).
+
+	"""
+
+
 	nwalkers, nsteps, ndim = np.shape(samples)
 
 	if labels is None:
