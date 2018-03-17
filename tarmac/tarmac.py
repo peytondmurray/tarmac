@@ -35,43 +35,60 @@ def labelOffset(ax, axis="y"):
 	updateLabel(None)
 	return
 
-def cornerPlot(fig, samples, bins=100, ranges=None, labels=None, cmap=None, plotType="hist"):
+def corner_plot(fig, samples, bins=100, ranges=None, labels=None, cmap='viridis', plotType='hist'):
+	"""Generate a corner plot.
+	
+	Using MCMC samples, generate a corner plot - a set of 2D histograms showing the bivariate distributions for each pair of model parameters.
+	
+	Parameters:
+	----------
+	fig : {matplotlib.figure.Figure}
+		Matplotlib figure in which to draw the corner plot. Should be empty.
+	samples : {numpy.ndarray}
+		MCMC samples of schape (nwalkers, nsamples, ndim).
+	bins : {int}, optional
+		Number of bins along each axis of each histogram.
+	ranges : {sequence}, optional
+		A list of bounds (min, max) for each histogram plot. (the default is None, which automatically chooses 3*sigma bounds about the mean.)
+	labels : {list}, optional
+		List of names of model parameters. Must be of length *ndim* (the default is None, which makes blank labels).
+	cmap : {[type]}, optional
+		[description] (the default is None, which [default_description])
+	plotType : {str}, optional
+		Specify the plot type. Should be one of
+		* 'hex'
+		* 'hist'
+
 	"""
-	Generate a cornerplot of the model parameters. Shows 2D slices of the parameter distributions.
 
-	samples: 2D array of shape (nsamples, ndim)
-	plotType: hex or hist - use hexbin or standard histogram
-	cmap: colormap for the 2d histograms
-	labels: names of the parameters, should be of length ndim
+	#Handling the arguments
+	if len(np.shape(samples)) != 3:
+		raise ValueError("Samples must be of shape (*nwalkers, nsamples, ndim*), but is of shape {}".format(np.shape(samples)))
+	else:
+		_, nsamples, ndim = np.shape(samples)
+		samples = samples.reshape((-1, ndim))
 
-	"""
-
-	#Make sure the arguments are all copacetic
-	assert len(np.shape(samples)) == 2, "samples list must be of shape (nsamples, ndim), but is of shape {}".format(np.shape(samples))
-	nsamples, ndim = np.shape(samples)
-	assert nsamples > ndim, "Number of samples is greater than number of dimensions."
-
+		if nsamples <= ndim:
+			raise ValueError("Number of samples <= number of dimensions. Is this really what you want for this dataset?")
 
 	if isinstance(bins, int):
 		bins = np.array([bins for _ in range(ndim)])
+	elif len(np.shape(bins)) != 1:
+		raise ValueError("Bins should be a 1D array or an integer.")
+	elif np.shape(bins)[0] != ndim:
+		raise ValueError("Dimension mismatch between bins and number of parameters in samples.")
 	else:
-		assert len(np.shape(bins)) == 1, "Bins should be a 1D array or an integer."
-		assert np.shape(bins)[0] == ndim, "Dimension mismatch between bins and number of columns in samples."
+		raise ValueError("Invalid type {} for parameter 'bins'.".format(type(bins)))
 
 	if ranges is None:
-		ranges = [makeNiceLimits(samples[:,i]) for i in range(ndim)]
+		ranges = [nice_bounds(samples[:,i]) for i in range(ndim)]
+	elif len(ranges) != ndim:
+		raise ValueError("Dimension mismatch between ranges and number of columns in samples.")
 	else:
-		assert len(ranges) == ndim, "Dimension mismatch between ranges and number of columns in samples."
-		for i in range(len(ranges)):
-			if range[i] is None:
-				range[i] = [np.nanmin(samples[:,i]), np.nanmax(samples[:,i])]
+		ranges = [nice_bounds(samples[:,i]) if ranges[i] is None else ranges[i] for i in range(ndim)]
 
 	if labels is None:
 		labels = ["" for _ in range(ndim)]
-
-	#Set the default colormap to viridis
-	if cmap is None:
-		cmap = "viridis"
 
 	#Divide the figure into a bunch of subplots, and Remove whitespace between plots
 	axes = fig.subplots(ndim, ndim)
@@ -79,18 +96,8 @@ def cornerPlot(fig, samples, bins=100, ranges=None, labels=None, cmap=None, plot
 
 	for i in range(ndim):
 
-		#Plot the 1D histograms along the diagonal
-		ax = axes[i, i]
-		ax.hist(samples[:,i], bins=bins[i], range=ranges[i])
-		ax.set_yticklabels([])
-		ax.set_xlim(makeNiceLimits(samples[:,i]))
-		if i < ndim - 1:
-			ax.set_xticklabels([])
-		elif i == ndim - 1:
-			ax.set_xlabel(labels[i])
-			ax.get_xaxis().set_major_locator(ticker.MaxNLocator(nbins=5, prune='upper'))
-			labelOffset(ax, "x")
-
+		#Plot the 1D histograms along the diagonal. If i == ndim-1, make xticklabels. Otherwise, omit them.
+		hist_1d(ax=axes[i,i], samples=samples[:,i], bins=bins[i], bounds=ranges[i], label=labels[i], show_xticklabels=(i == ndim - 1))
 
 		#Plot the 2D histograms in the lower left corner
 		for j in range(ndim):
@@ -115,34 +122,67 @@ def cornerPlot(fig, samples, bins=100, ranges=None, labels=None, cmap=None, plot
 
 				axes[i,j].get_xaxis().set_major_locator(ticker.MaxNLocator(nbins=5, prune='upper'))
 				axes[i,j].get_yaxis().set_major_locator(ticker.MaxNLocator(nbins=5, prune='upper'))
-				xlim, ylim = makeNiceLimits(samples[:,j]), makeNiceLimits(samples[:,i])
+				xlim, ylim = nice_bounds(samples[:,j]), nice_bounds(samples[:,i])
 				axes[i,j].set_xlim(xlim)
 				axes[i,j].set_ylim(ylim)
 
 			for tick in axes[i,j].get_xticklabels():
 				tick.set_rotation(45)
 
-
 	return
 
-def makeNiceLimits(samplesx, factor=3):
+def hist_1d(ax, samples, bins, bounds, label, show_xticklabels):
+
+	ax.hist(samples, bins=bins, range=bounds)
+	ax.set_yticklabels([])
+	ax.set_xlim(nice_bounds(samples))
+
+	if show_xticklabels:
+		ax.set_xlabel(label)
+		ax.get_xaxis().set_major_locator(ticker.MaxNLocator(nbins=5, prune='upper'))
+		labelOffset(ax, "x")
+	else:
+		ax.set_xticklabels([])
+	
+	return
+
+
+def nice_bounds(samplesx, factor=3):
+	"""Generate sensible limits for distribution plots.
+	
+	Finds the mean+factor*std_dev and mean-factor*std_dev of a set of samples.
+	
+	Parameters:
+	----------
+	samplesx : {ndarray}
+		Samples from a distribution.
+	factor : {int}, optional
+		Number of standard deviations to includde. (the default is 3, which usually gives nice looking plots without being too zoomed out)
+	
+	Returns
+	-------
+	tuple
+		(lower limit, upper limit) of plot.
 	"""
-
-	Determine reasonable axis limits for displaying the 2D joint distributions
-
-	"""
-
-
+	
 	sx = factor*np.std(samplesx)
 	avgx = np.mean(samplesx)
-	return [avgx-sx, avgx+sx]
+	return (avgx-sx, avgx+sx)
 
 def walkerTrace(fig, samples, labels=None, **kwargs):
-	"""
-
-	Make plots for each model parameter showing how the MCMC walkers traversed parameter space. Samples should be
-	of shape (nwalkers, nsteps, ndim).
-
+	"""Generate a walker trace figure from MCMC samples.
+	
+	Given some input MCMC samples, generate a figure with ndim subplots, one for each model parameter, showing the traces of each walker through the parameter subspace.
+	
+	Parameters:
+	----------
+	fig : {figure}
+		Empty Matplotlib figure in which to draw the walker trace subplots.
+	samples : {ndarray}
+		Output of MCMC sampler, must be of shape (nwalkers, nsamples, ndim).
+	labels : {list}, optional
+		List of length *ndim* containing variable names for each parameter. (the default is None, which means your parameters are unlabeled.)
+	
 	"""
 
 
