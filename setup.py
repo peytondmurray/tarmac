@@ -7,7 +7,7 @@ from setuptools import setup
 setup(
     name='tarmac',
     packages=['tarmac'],  # this must be the same as the name above
-    version='0.5',
+    version='0.6',
     description='Tools for processing and visualisation markov chain samples',
     author='Peyton Murray',
     author_email='peynmurray@gmail.com',
