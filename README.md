@@ -98,7 +98,7 @@ sampler.run_mcmc(init_walker_pos, N=samples)
 
 Looking at the `tarmac.corner_plot` and `tarmac.walker_trace` plots, it's immediately clear that something is a bit off:
 
-![double_gaussian](double_gaussian.svg)
+![double_gaussian](double_gaussian.png)
 
 In particular, the `tarmac.walker_trace` shows that the walkers didn't converge until ~200 step into the run. This is a common issue with MCMC sampling, and typically these steps are discarded. This behavior is a direct result of the fact that the walkers were initialized above using a uniform distribution across the interval [0, 1):
 
@@ -108,6 +108,6 @@ init_walker_pos = np.random.rand(nwalkers, ndim)
 
 This behavior is nothing to worry about, and if we toss out the first 250 samples we see the walkers are all well behaved:
 
-![double_gaussian_burnin](double_gaussian_burnin.svg)
+![double_gaussian_burnin](double_gaussian_burnin.png)
 
 The corner plot shows the two random variables x1 and x2 are uncorrelated, as expected. The walker trace shows that all walkers have converged. Nice!
