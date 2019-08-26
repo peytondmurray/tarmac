@@ -69,35 +69,29 @@ def corner_plot(fig, samples, bins=100, ranges=None, labels=None,
 
     # Handling the arguments
     if len(np.shape(samples)) != 3:
-        raise ValueError("Samples must be of shape(*nwalkers, nsamples, ndim "
-                         "but is of shape {}".format(np.shape(samples)))
+        raise ValueError("Samples must be of shape (nwalkers, nsamples, ndim), not {}".format(np.shape(samples)))
     else:
         _, nsamples, ndim = np.shape(samples)
         samples = samples.reshape((-1, ndim))
 
         if nsamples <= ndim:
-            raise ValueError("Number of samples <= number of dimensions. "
-                             "Is this really what you want for this dataset?")
+            raise ValueError("Number of samples <= number of dimensions. Is this intended for this dataset?")
 
     if isinstance(bins, int):
         bins = np.array([bins for _ in range(ndim)])
     elif len(np.shape(bins)) != 1:
         raise ValueError("Bins should be a 1D array or an integer.")
     elif np.shape(bins)[0] != ndim:
-        raise ValueError("Dimension mismatch between bins and number of "
-                         "parameters in samples.")
+        raise ValueError("Dimension mismatch between bins and number of parameters in samples.")
     else:
-        raise ValueError("Invalid type {} for parameter 'bins'."
-                         .format(type(bins)))
+        raise ValueError("Invalid type {} for parameter 'bins'.".format(type(bins)))
 
     if ranges is None:
         ranges = [nice_bounds(samples[:, i]) for i in range(ndim)]
     elif len(ranges) != ndim:
-        raise ValueError("Dimension mismatch between ranges and number of "
-                         "columns in samples.")
+        raise ValueError("Dimension mismatch between ranges and number of columns in samples.")
     else:
-        ranges = [nice_bounds(samples[:, i]) if ranges[i] is None
-                  else ranges[i] for i in range(ndim)]
+        ranges = [nice_bounds(samples[:, i]) if ranges[i] is None else ranges[i] for i in range(ndim)]
 
     if labels is None:
         labels = ["" for _ in range(ndim)]
@@ -105,45 +99,51 @@ def corner_plot(fig, samples, bins=100, ranges=None, labels=None,
     # Divide the figure into a bunch of subplots, and Remove whitespace
     # between plots
     axes = fig.subplots(ndim, ndim)
-    fig.subplots_adjust(left=0.1, bottom=0.1, right=0.98, top=0.98,
-                        wspace=0.05, hspace=0.05)
+    fig.subplots_adjust(left=0.1, bottom=0.1, right=0.98, top=0.98, wspace=0.05, hspace=0.05)
 
-    for i in range(ndim):
+    if ndim == 1:
+        hist_1d(ax=axes,
+                samples=samples[:, 0],
+                bins=bins[0],
+                bounds=ranges[0],
+                label=labels[0],
+                show_xlabels=True)
 
-        # Plot the 1D histograms along the diagonal. If i == ndim-1,
-        # make xticklabels. Otherwise, omit them.
-        hist_1d(ax=axes[i, i],
-                samples=samples[:, i],
-                bins=bins[i],
-                bounds=ranges[i],
-                label=labels[i],
-                show_xlabels=(i == ndim - 1)
-                )
+    else:
+        for i in range(ndim):
 
-        # Plot the 2D histograms in the lower left corner
-        for j in range(ndim):
+            # Plot the 1D histograms along the diagonal. If i == ndim-1,
+            # make xticklabels. Otherwise, omit them.
+            hist_1d(ax=axes[i, i],
+                    samples=samples[:, i],
+                    bins=bins[i],
+                    bounds=ranges[i],
+                    label=labels[i],
+                    show_xlabels=(i == ndim - 1))
 
-            if j > i:
-                axes[i, j].axis('off')
-            elif j < i:
+            # Plot the 2D histograms in the lower left corner
+            for j in range(ndim):
 
-                hist_2d(ax=axes[i, j],
-                        xsamples=samples[:, j],
-                        ysamples=samples[:, i],
-                        xbins=bins[j],
-                        ybins=bins[i],
-                        xbounds=ranges[j],
-                        ybounds=ranges[i],
-                        xlabel=labels[j],
-                        ylabel=labels[i],
-                        cmap=cmap,
-                        plot_type=plot_type,
-                        show_ylabels=(j == 0),
-                        show_xlabels=(i == ndim - 1)
-                        )
+                if j > i:
+                    axes[i, j].axis('off')
+                elif j < i:
 
-            for tick in axes[i, j].get_xticklabels():
-                tick.set_rotation(45)
+                    hist_2d(ax=axes[i, j],
+                            xsamples=samples[:, j],
+                            ysamples=samples[:, i],
+                            xbins=bins[j],
+                            ybins=bins[i],
+                            xbounds=ranges[j],
+                            ybounds=ranges[i],
+                            xlabel=labels[j],
+                            ylabel=labels[i],
+                            cmap=cmap,
+                            plot_type=plot_type,
+                            show_ylabels=(j == 0),
+                            show_xlabels=(i == ndim - 1))
+
+                for tick in axes[i, j].get_xticklabels():
+                    tick.set_rotation(45)
 
     return
 
@@ -155,8 +155,7 @@ def hist_1d(ax, samples, bins, bounds, label, show_xlabels):
 
     if show_xlabels:
         ax.set_xlabel(label)
-        ax.get_xaxis().set_major_locator(
-            ticker.MaxNLocator(nbins=5, prune='upper'))
+        ax.get_xaxis().set_major_locator(ticker.MaxNLocator(nbins=5, prune='upper'))
         label_offset(ax, "x")
     else:
         ax.set_xticklabels([])
@@ -167,8 +166,7 @@ def hist_1d(ax, samples, bins, bounds, label, show_xlabels):
 def hist_2d(ax, xsamples, ysamples, xbins, ybins, xbounds, ybounds, xlabel,
             ylabel, cmap, plot_type, show_ylabels, show_xlabels):
     if plot_type in ["hist", "histogram"]:
-        ax.hist2d(xsamples, ysamples, bins=[xbins, ybins],
-                  range=[xbounds, ybounds], cmap=cmap)
+        ax.hist2d(xsamples, ysamples, bins=[xbins, ybins], range=[xbounds, ybounds], cmap=cmap)
     elif plot_type in ["hex", "hexbin"]:
         ax.hexbin(xsamples, ysamples,
                   gridsize=[int(0.5 * xbins), int(0.5 * ybins)],
@@ -188,10 +186,8 @@ def hist_2d(ax, xsamples, ysamples, xbins, ybins, xbounds, ybounds, xlabel,
     else:
         ax.set_xticklabels([])
 
-    ax.get_xaxis().set_major_locator(
-        ticker.MaxNLocator(nbins=5, prune='upper'))
-    ax.get_yaxis().set_major_locator(
-        ticker.MaxNLocator(nbins=5, prune='upper'))
+    ax.get_xaxis().set_major_locator(ticker.MaxNLocator(nbins=5, prune='upper'))
+    ax.get_yaxis().set_major_locator(ticker.MaxNLocator(nbins=5, prune='upper'))
     ax.set_xlim(nice_bounds(xsamples))
     ax.set_ylim(nice_bounds(ysamples))
 
@@ -252,26 +248,29 @@ def walker_trace(fig, samples, labels=None, **kwargs):
         kwargs["alpha"] = 0.3
 
     axes = fig.subplots(ndim, 1)
-    fig.subplots_adjust(left=0.1,
-                        bottom=0.1,
-                        right=0.98,
-                        top=0.98,
-                        wspace=0.05,
-                        hspace=0.05
-                        )
+    fig.subplots_adjust(left=0.1, bottom=0.1, right=0.98, top=0.98, wspace=0.05, hspace=0.05)
 
-    for i in range(ndim):
-        axes[i].plot(samples[:, :, i].T, **kwargs)
+    if ndim == 1:
+        axes.plot(samples[:, :, 0].T, **kwargs)
+        
+        axes.set_xlim(0, nsteps)
+        if labels[0] is not None:
+            axes.set_ylabel(labels[0])
+        label_offset(axes, "y")
 
-        if i < ndim - 1:
-            axes[i].set_xticklabels([])
+    else:
+        for i in range(ndim):
+            axes[i].plot(samples[:, :, i].T, **kwargs)
 
-        axes[i].set_xlim(0, nsteps)
-        if labels[i] is not None:
-            axes[i].set_ylabel(labels[i])
+            if i < ndim - 1:
+                axes[i].set_xticklabels([])
 
-        label_offset(axes[i], "y")
+            axes[i].set_xlim(0, nsteps)
+            if labels[i] is not None:
+                axes[i].set_ylabel(labels[i])
 
-    axes[ndim - 1].set_xlabel("Step")
+            label_offset(axes[i], "y")
+
+        axes[ndim - 1].set_xlabel("Step")
 
     return
