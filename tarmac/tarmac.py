@@ -257,6 +257,7 @@ def walker_trace(fig, samples, labels=None, **kwargs):
         if labels[0] is not None:
             axes.set_ylabel(labels[0])
         label_offset(axes, "y")
+        axes.set_xlabel("Step")
 
     else:
         for i in range(ndim):
