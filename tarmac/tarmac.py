@@ -37,8 +37,7 @@ def label_offset(ax, axis="y"):
     return
 
 
-def corner_plot(fig, samples, bins=100, ranges=None, labels=None,
-                cmap='viridis', plot_type='hist'):
+def corner_plot(fig, samples, bins=100, ranges=None, labels=None, cmap='viridis', plot_type='hist'):
     """Generate a corner plot.
     
     Using MCMC samples, generate a corner plot - a set of 2D histograms
@@ -98,7 +97,7 @@ def corner_plot(fig, samples, bins=100, ranges=None, labels=None,
 
     # Divide the figure into a bunch of subplots, and Remove whitespace
     # between plots
-    axes = fig.subplots(ndim, ndim)
+    axes = fig.subplots(ndim, ndim, sharex='col')
     fig.subplots_adjust(left=0.1, bottom=0.1, right=0.98, top=0.98, wspace=0.05, hspace=0.05)
 
     if ndim == 1:
@@ -157,22 +156,41 @@ def hist_1d(ax, samples, bins, bounds, label, show_xlabels):
         ax.set_xlabel(label)
         ax.get_xaxis().set_major_locator(ticker.MaxNLocator(nbins=5, prune='upper'))
         label_offset(ax, "x")
-    else:
-        ax.set_xticklabels([])
 
     return
 
 
-def hist_2d(ax, xsamples, ysamples, xbins, ybins, xbounds, ybounds, xlabel,
-            ylabel, cmap, plot_type, show_ylabels, show_xlabels):
+def hist_2d(ax, xsamples, ysamples, xbins, ybins, xbounds, ybounds, xlabel, ylabel, cmap, plot_type, show_ylabels,
+            show_xlabels, density=True):
     if plot_type in ["hist", "histogram"]:
-        ax.hist2d(xsamples, ysamples, bins=[xbins, ybins], range=[xbounds, ybounds], cmap=cmap)
+
+        # matplotlib's ax.hist2d makes a patch for each bin (bug?). Instead, use imshow to make a cleaner, faster plot.
+
+        # By default, np.histogram2d histograms x-values along the first dimension of the pdf, and y-values along
+        # the second dimension. This is opposite to how we want to display the data, which is why the x and y values
+        # are swapped here. 
+        pdf, yedges, xedges = np.histogram2d(ysamples, 
+                                             xsamples, 
+                                             bins=[ybins, xbins], 
+                                             range=[ybounds, xbounds], 
+                                             density=density)
+
+        ax.imshow(pdf,
+                  extent=[xbounds[0], xbounds[1], ybounds[0], ybounds[1]],
+                  cmap=cmap,
+                  interpolation='nearest',
+                  origin='lower')
     elif plot_type in ["hex", "hexbin"]:
-        ax.hexbin(xsamples, ysamples,
+        ax.hexbin(xsamples,
+                  ysamples,
                   gridsize=[int(0.5 * xbins), int(0.5 * ybins)],
-                  extent=[*xbounds, *ybounds], cmap=cmap)
+                  extent=[*xbounds, *ybounds],
+                  cmap=cmap)
     else:
         raise ValueError("Invalid plot_type: {}".format(plot_type))
+
+
+    ax.set_aspect('auto')
 
     if show_ylabels:
         ax.set_ylabel(ylabel)
@@ -183,8 +201,6 @@ def hist_2d(ax, xsamples, ysamples, xbins, ybins, xbounds, ybounds, xlabel,
     if show_xlabels:
         ax.set_xlabel(xlabel)
         label_offset(ax, "x")
-    else:
-        ax.set_xticklabels([])
 
     ax.get_xaxis().set_major_locator(ticker.MaxNLocator(nbins=5, prune='upper'))
     ax.get_yaxis().set_major_locator(ticker.MaxNLocator(nbins=5, prune='upper'))
