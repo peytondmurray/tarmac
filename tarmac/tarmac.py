@@ -37,7 +37,8 @@ def label_offset(ax, axis="y"):
     return
 
 
-def corner_plot(fig, samples, bins=100, ranges=None, labels=None, cmap='viridis', plot_type='hist'):
+def corner_plot(fig, samples, bins=100, ranges=None, labels=None, cmap='viridis', plot_type='hist',
+                facecolor='C0', edgecolor=None, density=True):
     """Generate a corner plot.
     
     Using MCMC samples, generate a corner plot - a set of 2D histograms
@@ -106,7 +107,10 @@ def corner_plot(fig, samples, bins=100, ranges=None, labels=None, cmap='viridis'
                 bins=bins[0],
                 bounds=ranges[0],
                 label=labels[0],
-                show_xlabels=True)
+                show_xlabels=True,
+                density=density,
+                facecolor=facecolor,
+                edgecolor=edgecolor)
 
     else:
         for i in range(ndim):
@@ -118,7 +122,9 @@ def corner_plot(fig, samples, bins=100, ranges=None, labels=None, cmap='viridis'
                     bins=bins[i],
                     bounds=ranges[i],
                     label=labels[i],
-                    show_xlabels=(i == ndim - 1))
+                    show_xlabels=(i == ndim - 1),
+                    facecolor=facecolor,
+                    edgecolor=edgecolor)
 
             # Plot the 2D histograms in the lower left corner
             for j in range(ndim):
@@ -139,7 +145,8 @@ def corner_plot(fig, samples, bins=100, ranges=None, labels=None, cmap='viridis'
                             cmap=cmap,
                             plot_type=plot_type,
                             show_ylabels=(j == 0),
-                            show_xlabels=(i == ndim - 1))
+                            show_xlabels=(i == ndim - 1),
+                            density=density)
 
                 for tick in axes[i, j].get_xticklabels():
                     tick.set_rotation(45)
@@ -147,8 +154,13 @@ def corner_plot(fig, samples, bins=100, ranges=None, labels=None, cmap='viridis'
     return
 
 
-def hist_1d(ax, samples, bins, bounds, label, show_xlabels):
-    ax.hist(samples, bins=bins, range=bounds)
+def hist_1d(ax, samples, bins, bounds, label, show_xlabels, density=True, facecolor='C0', edgecolor=None):
+    # ax.hist(samples, bins=bins, range=bounds)
+
+    pdf, xedges = np.histogram(samples, bins=bins, range=bounds, density=density)
+    pdf = np.append(pdf, 0)
+    ax.fill_between(xedges, pdf, step='post', facecolor=facecolor, edgecolor=edgecolor)
+
     ax.set_yticklabels([])
     ax.set_xlim(nice_bounds(samples))
 
