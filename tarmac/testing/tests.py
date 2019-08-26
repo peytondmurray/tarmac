@@ -1,7 +1,6 @@
 import tarmac.tarmac as tm
 import numpy as np
 import pytest
-import cmocean
 import matplotlib.pyplot as plt
 
 
@@ -19,7 +18,7 @@ def test_corner_plot():
     tm.corner_plot(fig,
                    data,
                    labels=['a','b','c','d'],
-                   cmap=cmocean.cm.cmap_d['tempo_r']
+                   cmap='viridis'
                    )
     plt.show()
     return

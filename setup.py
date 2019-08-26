@@ -7,14 +7,14 @@ from setuptools import setup
 setup(
     name='tarmac',
     packages=['tarmac'],  # this must be the same as the name above
-    version='0.6',
-    description='Tools for processing and visualisation markov chain samples',
+    version='0.7',
+    description='Tools for processing and visualization markov chain samples',
     author='Peyton Murray',
     author_email='peynmurray@gmail.com',
     url='https://github.com/peytondmurray/tarmac',
     # use the URL to the github repo
-    license="GNU GPL 3.0",
-    download_url='https://github.com/peytondmurray/tarmac/archive/0.4.zip',
+    license="MIT",
+    download_url='https://github.com/peytondmurray/tarmac/archive/0.7.zip',
     keywords=['plotting', 'mcmc', 'markov chain', 'monte carlo', "bayesian"],
     # arbitrary keywords
     classifiers=[
@@ -30,11 +30,9 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
-    install_requires=["matplotlib", "numpy", "cmocean"],
+    install_requires=["matplotlib", "numpy"],
     python_requires='>=3',
 )
