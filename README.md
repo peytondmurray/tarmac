@@ -53,7 +53,7 @@ sampler = emcee.EnsembleSampler(nwalkers=nwalkers, dim=ndim, lnpostfn=ln_gaussia
 sampler.run_mcmc(init_walker_pos, N=samples)
 ```
 
-Now `sampler.chain` contains the Markov chains which sample from the distribution; this object is an array of shape `(nwalkers, nsamples, ndim)`. Let's plot the resulting distribution using `tarmac`:
+Now `sampler.chain` contains the Markov chains which sample from the distribution; this object is an array of shape `(nsamples, nwalkers, ndim)`. Let's plot the resulting distribution using `tarmac`:
 
 ```python
 fig = plt.figure()

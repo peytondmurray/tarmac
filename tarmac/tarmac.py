@@ -5,7 +5,7 @@ import matplotlib.ticker as ticker
 def label_offset(ax, axis="y"):
     """
 
-    Removes axis ticklabel offsets (e.g. exponents) and moves them to the axis 
+    Removes axis ticklabel offsets (e.g. exponents) and moves them to the axis
     label. Label is dynamically updated when axis range changes.
 
     """
@@ -40,23 +40,23 @@ def label_offset(ax, axis="y"):
 def corner_plot(fig, samples, bins=100, ranges=None, labels=None, cmap='viridis', plot_type='hist',
                 facecolor='C0', edgecolor=None, density=True):
     """Generate a corner plot.
-    
+
     Using MCMC samples, generate a corner plot - a set of 2D histograms
     showing the bivariate distributions for each pair of model parameters.
-    
+
     Parameters:
     ----------
     fig : {matplotlib.figure.Figure}
         Matplotlib figure in which to draw the corner plot. Should be empty.
     samples : {numpy.ndarray}
-        MCMC samples of schape (nwalkers, nsamples, ndim).
+        MCMC samples of shape (nsamples, nwalkers, ndim).
     bins : {int}, optional
         Number of bins along each axis of each histogram.
     ranges : {sequence}, optional
-        A list of bounds (min, max) for each histogram plot. (the default 
+        A list of bounds (min, max) for each histogram plot. (the default
         is None, which automatically chooses 3*sigma bounds about the mean.)
     labels : {list}, optional
-        List of names of model parameters. Must be of length *ndim* (the 
+        List of names of model parameters. Must be of length *ndim* (the
         default is None, which makes blank labels).
     cmap : {[type]}, optional
         [description] (the default is None, which [default_description])
@@ -69,9 +69,9 @@ def corner_plot(fig, samples, bins=100, ranges=None, labels=None, cmap='viridis'
 
     # Handling the arguments
     if len(np.shape(samples)) != 3:
-        raise ValueError("Samples must be of shape (nwalkers, nsamples, ndim), not {}".format(np.shape(samples)))
+        raise ValueError(f"Samples must be of shape (nsamples, nwalkers, ndim), not {np.shape(samples)}")
     else:
-        _, nsamples, ndim = np.shape(samples)
+        nsamples, _nwalkers, ndim = np.shape(samples)
         samples = samples.reshape((-1, ndim))
 
         if nsamples <= ndim:
@@ -155,8 +155,6 @@ def corner_plot(fig, samples, bins=100, ranges=None, labels=None, cmap='viridis'
 
 
 def hist_1d(ax, samples, bins, bounds, label, show_xlabels, density=True, facecolor='C0', edgecolor=None):
-    # ax.hist(samples, bins=bins, range=bounds)
-
     pdf, xedges = np.histogram(samples, bins=bins, range=bounds, density=density)
     pdf = np.append(pdf, 0)
     ax.fill_between(xedges, pdf, step='post', facecolor=facecolor, edgecolor=edgecolor)
@@ -177,14 +175,14 @@ def hist_2d(ax, xsamples, ysamples, xbins, ybins, xbounds, ybounds, xlabel, ylab
     if plot_type in ["hist", "histogram"]:
 
         # matplotlib's ax.hist2d makes a patch for each bin (bug?). Instead, use imshow to make a cleaner, faster plot.
-
+        #
         # By default, np.histogram2d histograms x-values along the first dimension of the pdf, and y-values along
         # the second dimension. This is opposite to how we want to display the data, which is why the x and y values
-        # are swapped here. 
-        pdf, yedges, xedges = np.histogram2d(ysamples, 
-                                             xsamples, 
-                                             bins=[ybins, xbins], 
-                                             range=[ybounds, xbounds], 
+        # are swapped here.
+        pdf, yedges, xedges = np.histogram2d(ysamples,
+                                             xsamples,
+                                             bins=[ybins, xbins],
+                                             range=[ybounds, xbounds],
                                              density=density)
 
         ax.imshow(pdf,
@@ -224,9 +222,9 @@ def hist_2d(ax, xsamples, ysamples, xbins, ybins, xbounds, ybounds, xlabel, ylab
 
 def nice_bounds(samplesx, factor=3):
     """Generate sensible limits for distribution plots.
-    
+
     Finds the mean+factor*std_dev and mean-factor*std_dev of a set of samples.
-    
+
     Parameters:
     ----------
     samplesx : {ndarray}
@@ -234,7 +232,7 @@ def nice_bounds(samplesx, factor=3):
     factor : {int}, optional
         Number of standard deviations to includde. (the default is 3, which
         usually gives nice looking plots without being too zoomed out)
-    
+
     Returns
     -------
     tuple
@@ -248,24 +246,24 @@ def nice_bounds(samplesx, factor=3):
 
 def walker_trace(fig, samples, labels=None, **kwargs):
     """Generate a walker trace figure from MCMC samples.
-    
+
     Given some input MCMC samples, generate a figure with ndim subplots, one
     for each model parameter, showing the traces of each walker through the
     parameter subspace.
-    
+
     Parameters:
     ----------
     fig : {figure}
         Empty Matplotlib figure in which to draw the walker trace subplots.
     samples : {ndarray}
-        Output of MCMC sampler, must be of shape (nwalkers, nsamples, ndim).
+        Output of MCMC sampler, must be of shape (nsamples, nwalkers, ndim).
     labels : {list}, optional
         List of length *ndim* containing variable names for each parameter.
         (the default is None, which means your parameters are unlabeled.)
-    
+
     """
 
-    nwalkers, nsteps, ndim = np.shape(samples)
+    nsteps, nwalkers, ndim = np.shape(samples)
 
     if labels is None:
         labels = [None for _ in range(ndim)]
@@ -279,8 +277,8 @@ def walker_trace(fig, samples, labels=None, **kwargs):
     fig.subplots_adjust(left=0.1, bottom=0.1, right=0.98, top=0.98, wspace=0.05, hspace=0.05)
 
     if ndim == 1:
-        axes.plot(samples[:, :, 0].T, **kwargs)
-        
+        axes.plot(samples[:, :, 0], **kwargs)
+
         axes.set_xlim(0, nsteps)
         if labels[0] is not None:
             axes.set_ylabel(labels[0])
@@ -289,7 +287,7 @@ def walker_trace(fig, samples, labels=None, **kwargs):
 
     else:
         for i in range(ndim):
-            axes[i].plot(samples[:, :, i].T, **kwargs)
+            axes[i].plot(samples[:, :, i], **kwargs)
 
             if i < ndim - 1:
                 axes[i].set_xticklabels([])
