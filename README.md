@@ -1,26 +1,28 @@
 # **tarmac**
+
 Tools for (quickly) visualizing markov chain samples.
 
 [Installation](#Installation)
-* [Prerequisites](#Prerequisites)
+
+- [Prerequisites](#Prerequisites)
 
 [Examples](#Examples):
-* [Simple sample of a gaussian distribution](#Simple-sampling-of-a-gaussian-distribution)
-* [Sampling the product of two gaussian distributions](#Sampling-the-product-of-two-gaussian-distributions)
+
+- [Simple sample of a gaussian distribution](#Simple-sampling-of-a-gaussian-distribution)
+- [Sampling the product of two gaussian distributions](#Sampling-the-product-of-two-gaussian-distributions)
 
 ## **Installation**
 
 To install, use `pip`:
 
-```pip install tarmac```
+`pip install tarmac`
 
 ### **Prerequisites:**
-* numpy
-* matplotlib
 
+- numpy
+- matplotlib
 
 ## **Examples**
-
 
 ### **Simple sampling of a gaussian distribution**
 
