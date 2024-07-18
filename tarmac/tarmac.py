@@ -28,6 +28,9 @@ def label_offset(ax, axis="y"):
             labelfunc("{}".format(label))
         else:
             labelfunc("{} ({})".format(label, offset))
+
+        # Only display labels on axes which lie at the edge of the subplot grid
+        ax.label_outer()
         return
 
     ax.callbacks.connect("ylim_changed", update_label)
@@ -66,8 +69,6 @@ def corner_plot(fig, samples, bins=100, ranges=None, labels=None, cmap='viridis'
         * 'hist'
 
     """
-
-    # Handling the arguments
     if len(np.shape(samples)) != 3:
         raise ValueError(f"Samples must be of shape (nsamples, nwalkers, ndim), not {np.shape(samples)}")
     else:
@@ -122,7 +123,6 @@ def corner_plot(fig, samples, bins=100, ranges=None, labels=None, cmap='viridis'
                     bins=bins[i],
                     bounds=ranges[i],
                     label=labels[i],
-                    show_xlabels=(i == ndim - 1),
                     facecolor=facecolor,
                     edgecolor=edgecolor)
 
@@ -144,9 +144,8 @@ def corner_plot(fig, samples, bins=100, ranges=None, labels=None, cmap='viridis'
                             ylabel=labels[i],
                             cmap=cmap,
                             plot_type=plot_type,
-                            show_ylabels=(j == 0),
-                            show_xlabels=(i == ndim - 1),
-                            density=density)
+                            density=density,
+                            sharey=axes[i, 0])
 
                 for tick in axes[i, j].get_xticklabels():
                     tick.set_rotation(45)
@@ -154,7 +153,17 @@ def corner_plot(fig, samples, bins=100, ranges=None, labels=None, cmap='viridis'
     return
 
 
-def hist_1d(ax, samples, bins, bounds, label, show_xlabels, density=True, facecolor='C0', edgecolor=None):
+def hist_1d(
+    ax,
+    samples,
+    bins,
+    bounds,
+    label,
+    # show_xlabels,
+    density=True,
+    facecolor="C0",
+    edgecolor=None,
+):
     pdf, xedges = np.histogram(samples, bins=bins, range=bounds, density=density)
     pdf = np.append(pdf, 0)
     ax.fill_between(xedges, pdf, step='post', facecolor=facecolor, edgecolor=edgecolor)
@@ -162,16 +171,28 @@ def hist_1d(ax, samples, bins, bounds, label, show_xlabels, density=True, faceco
     ax.set_yticklabels([])
     ax.set_xlim(nice_bounds(samples))
 
-    if show_xlabels:
-        ax.set_xlabel(label)
-        ax.get_xaxis().set_major_locator(ticker.MaxNLocator(nbins=5, prune='upper'))
-        label_offset(ax, "x")
+    ax.set_xlabel(label)
+    ax.get_xaxis().set_major_locator(ticker.MaxNLocator(nbins=5, prune='upper'))
+    label_offset(ax, "x")
 
     return
 
 
-def hist_2d(ax, xsamples, ysamples, xbins, ybins, xbounds, ybounds, xlabel, ylabel, cmap, plot_type, show_ylabels,
-            show_xlabels, density=True):
+def hist_2d(
+    ax,
+    xsamples,
+    ysamples,
+    xbins,
+    ybins,
+    xbounds,
+    ybounds,
+    xlabel,
+    ylabel,
+    cmap,
+    plot_type,
+    density=True,
+    sharey=None,
+):
     if plot_type in ["hist", "histogram"]:
 
         # matplotlib's ax.hist2d makes a patch for each bin (bug?). Instead, use imshow to make a cleaner, faster plot.
@@ -202,20 +223,19 @@ def hist_2d(ax, xsamples, ysamples, xbins, ybins, xbounds, ybounds, xlabel, ylab
 
     ax.set_aspect('auto')
 
-    if show_ylabels:
-        ax.set_ylabel(ylabel)
-        label_offset(ax, "y")
-    else:
-        ax.set_yticklabels([])
-
-    if show_xlabels:
-        ax.set_xlabel(xlabel)
-        label_offset(ax, "x")
+    ax.sharey(sharey)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    label_offset(ax, "x")
+    label_offset(ax, "y")
 
     ax.get_xaxis().set_major_locator(ticker.MaxNLocator(nbins=5, prune='upper'))
     ax.get_yaxis().set_major_locator(ticker.MaxNLocator(nbins=5, prune='upper'))
     ax.set_xlim(nice_bounds(xsamples))
     ax.set_ylim(nice_bounds(ysamples))
+
+    # Only display labels on axes which lie at the edge of the subplot grid
+    ax.label_outer()
 
     return
 
