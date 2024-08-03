@@ -328,7 +328,7 @@ def walker_trace(
     if "alpha" not in kwargs:
         kwargs["alpha"] = 0.3
 
-    axes = fig.subplots(ndim, 1)
+    axes = fig.subplots(ndim, 1, sharex="col")
     fig.subplots_adjust(
         left=0.1, bottom=0.1, right=0.98, top=0.98, wspace=0.05, hspace=0.05
     )
