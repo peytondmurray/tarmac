@@ -17,7 +17,6 @@ def _label_offset(ax: plt.Axes, axis: str = "y") -> None:
         Axes instance to label the offset on
     axis : str
         Axis to label of the offset on; can be 'x' or 'y'
-
     """
     if axis == "y":
         fmt = ax.yaxis.get_major_formatter()
@@ -345,10 +344,6 @@ def walker_trace(
     else:
         for i in range(ndim):
             axes[i].plot(samples[:, :, i], **kwargs)
-
-            if i < ndim - 1:
-                axes[i].set_xticklabels([])
-
             axes[i].set_xlim(0, nsteps)
             if labels[i] is not None:
                 axes[i].set_ylabel(labels[i])
